@@ -85,7 +85,7 @@ def init_ind_cascade(node_id,nc):
     return activated
  
 def ind_cascade(node_id,nc,activated,q):
-    edges = nx.edges(nc,nbunch=node_id)
+    edges = nx.edges_iter(nc,nbunch=node_id)
     for x in edges:
         #print "Edge " + str(x)
         if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
@@ -104,13 +104,14 @@ if __name__ == '__main__':
     NC_digraph = import_graph("nc_mini.json")
     random.seed(24)
     node = random.randint(0, 240)
+    node = NC_digraph.nodes()[node]
     #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
     #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
     N = 1000    
     results = numpy.zeros(N)  
     tstart = time.clock()
     for i in range(0, N):
-        results[i] = len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph))
+        results[i] = len(init_ind_cascade(node,NC_digraph))
     print "Time: " + str(time.clock() - tstart)
     print numpy.mean(results)
     print numpy.std(results)
