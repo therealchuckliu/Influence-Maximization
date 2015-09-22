@@ -80,7 +80,13 @@ def init_ind_cascade(node_id,nc):
     
     while not q.empty():
         node = q.get()
-        ind_cascade(node,nc,activated,q)
+        edges = nx.edges_iter(nc, nbunch=node)
+        for x in edges:
+            #if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
+            if x[1] not in activated and random.uniform() <= random.beta(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count'])**0.5:
+                activated.add(x[1])
+                q.put(x[1])
+        #ind_cascade(node,nc,activated,q)
         
     return activated
  
@@ -92,8 +98,8 @@ def ind_cascade(node_id,nc,activated,q):
             activated.add(x[1])
             q.put(x[1])
   
-def edge_activate(b,a):
-    v = math.sqrt(random.beta(b,a))
+def edge_activate(a,b):
+    v = math.sqrt(random.beta(a,b))
     u = random.uniform()
     #print "Weight: " + str(b) + "\nReview Count:" + str(a)
     #print "beta=" + str(v) + "\nuni=" + str(u) + "\nbeta-uni=" + str(v-u)
