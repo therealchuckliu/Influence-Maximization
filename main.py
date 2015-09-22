@@ -12,6 +12,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 import matplotlib.pyplot as plt
 from numpy import random
+from pylab import polyfit
 import numpy
 import Queue
 import math
@@ -89,7 +90,8 @@ def init_ind_cascade(node_id,nc):
         #ind_cascade(node,nc,activated,q)
         
     return activated
- 
+
+#unused 
 def ind_cascade(node_id,nc,activated,q):
     edges = nx.edges_iter(nc,nbunch=node_id)
     for x in edges:
@@ -97,7 +99,8 @@ def ind_cascade(node_id,nc,activated,q):
         if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
             activated.add(x[1])
             q.put(x[1])
-  
+ 
+#unused 
 def edge_activate(a,b):
     v = math.sqrt(random.beta(a,b))
     u = random.uniform()
@@ -107,17 +110,33 @@ def edge_activate(a,b):
         
         
 if __name__ == '__main__':
+    
     NC_digraph = import_graph("nc_mini.json")
     random.seed(24)
     node = random.randint(0, 240)
     node = NC_digraph.nodes()[node]
     #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
     #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
-    N = 1000    
-    results = numpy.zeros(N)  
-    tstart = time.clock()
-    for i in range(0, N):
-        results[i] = len(init_ind_cascade(node,NC_digraph))
-    print "Time: " + str(time.clock() - tstart)
-    print numpy.mean(results)
-    print numpy.std(results)
+    N_arr = [10,50,100,300,500,1000]
+    std_arr = []
+    for N in N_arr:
+        mean_arr = []
+        run_size = 100
+        for i in xrange(0,run_size - 1):
+            results = numpy.zeros(N)  
+            tstart = time.clock()
+            for i in range(0, N):
+                results[i] = len(init_ind_cascade(node,NC_digraph))
+        
+            mean_arr.append(numpy.mean(results))   
+            print str(N) + " done."
+                    
+            #print "Time: " + str(time.clock() - tstart)
+            #print numpy.mean(results)        
+            #print numpy.std(results)
+        std_arr.append(numpy.std(mean_arr))
+    
+    plt.plot(N_arr,std_arr)
+    print std_arr
+    
+    
