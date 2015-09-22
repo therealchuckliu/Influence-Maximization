@@ -59,8 +59,6 @@ def print_graph(Graph, S1=None):
 def rank_by_attribute(graph_dict, ret_num):
     top_nodes = graph_dict.keys()
     top_nodes.sort(key= lambda k: graph_dict[k], reverse=True)
-    print graph_dict[top_nodes[0]]
-    print graph_dict[top_nodes[1]]    
     return top_nodes[:ret_num]
     
 
@@ -76,8 +74,7 @@ def rank_by_attribute2(graph_dict, ret_num):
     return top_nodes[:ret_num]
 
 def init_ind_cascade(node_id,nc):
-
-    activated = [node_id]
+    activated = set([node_id])
     q = Queue.Queue()
     q.put(node_id)
     
@@ -87,59 +84,33 @@ def init_ind_cascade(node_id,nc):
         
     return activated
  
-@profile
 def ind_cascade(node_id,nc,activated,q):
- 
     edges = nx.edges(nc,nbunch=node_id)
     for x in edges:
-        if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[node_id]['review_count']) == 1:
-            activated.append(x[1])
+        #print "Edge " + str(x)
+        if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
+            activated.add(x[1])
             q.put(x[1])
   
 def edge_activate(b,a):
     v = math.sqrt(random.beta(b,a))
     u = random.uniform()
-    if u < v:
-        return 1
-    else:
-        return 0
+    #print "Weight: " + str(b) + "\nReview Count:" + str(a)
+    #print "beta=" + str(v) + "\nuni=" + str(u) + "\nbeta-uni=" + str(v-u)
+    return u <= v
         
         
 if __name__ == '__main__':
-    #705 = 132
-    #469 = 118
     NC_digraph = import_graph("nc_mini.json")
-    #print_graph(NC_digraph)
-    results = []
-    for k in range(0,1000):
-        results.append(len(init_ind_cascade(NC_digraph.nodes()[162],NC_digraph))-1)
-        
-    plt.hist(results)
+    random.seed(24)
+    node = random.randint(0, 240)
+    #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
+    #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
+    N = 1000    
+    results = numpy.zeros(N)  
+    tstart = time.clock()
+    for i in range(0, N):
+        results[i] = len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph))
+    print "Time: " + str(time.clock() - tstart)
     print numpy.mean(results)
     print numpy.std(results)
-    
-    '''
-    for k in range (500,520):
-        seed = k
-        random.seed(506)
-        seeds.append(506)       
-        results.append(len(init_ind_cascade(NC_digraph.nodes()[47],NC_digraph)))
-        #print "seed =" + str(seed)
-        #print "activated =" + str(len(init_ind_cascade(NC_digraph.nodes()[number],NC_digraph)))
-    print seeds
-    print results
-    
-    random.seed(506)
-
-    random.seed(12)
-    print random.choice(NC_digraph.nodes())
-    print len(init_ind_cascade(random.choice(NC_digraph.nodes()),NC_digraph))
-    
-    
-    #get top 5 nodes by review_count
-    print rank_by_attribute(nx.get_node_attributes(NC_digraph, "review_count"), 3)
-    #print rank_by_attribute2(nx.get_node_attributes(NC_digraph, "review_count"), 3)
-    
-    #get top 5 edges by weight
-    #rank_by_attribute(nx.get_edge_attributes(NC_digraph, "weight"), 3)
-    '''
