@@ -74,10 +74,11 @@ def rank_by_attribute2(graph_dict, ret_num):
             top_nodes.insert(index, node)
     return top_nodes[:ret_num]
 
-def init_ind_cascade(node_id,nc):
-    activated = set([node_id])
+def init_ind_cascade(nodes,nc):
+    activated = set(nodes)
     q = Queue.Queue()
-    q.put(node_id)
+    for node in nodes:
+        q.put(node)
     
     while not q.empty():
         node = q.get()
@@ -106,12 +107,38 @@ def edge_activate(a,b):
     u = random.uniform()
     #print "Weight: " + str(b) + "\nReview Count:" + str(a)
     #print "beta=" + str(v) + "\nuni=" + str(u) + "\nbeta-uni=" + str(v-u)
-    return u <= v
-        
+    return u <= v   
+
+def cascade_trials(N, nodes, graph):
+    results = numpy.zeros(N)
+    start = time.time()
+    for i in xrange(0, N):
+        results[i] = len(init_ind_cascade(nodes, graph))
+    return {"time": time.time() - start, "mean": numpy.mean(results), "std": numpy.std(results)}
+    
+def greedy_max_influence(g, size, infl_trials):
+    sel_nodes = set()
+    nodes = set(g.nodes())
+    while len(sel_nodes) < size:
+        inf_max = 0
+        max_node = None
+        for node in nodes:
+            cascade_run = cascade_trials(infl_trials, sel_nodes | set([node]), g)
+            if cascade_run["mean"] > inf_max:
+                inf_max = cascade_run["mean"]
+                max_node = node
+        if max_node is not None:
+            sel_nodes.add(max_node)
+            nodes.remove(max_node)
+        else:
+            return sel_nodes
+    return sel_nodes    
         
 if __name__ == '__main__':
     
     NC_digraph = import_graph("nc_mini.json")
+    '''  
+    previous code for runs
     random.seed(24)
     node = random.randint(0, 240)
     node = NC_digraph.nodes()[node]
@@ -126,7 +153,7 @@ if __name__ == '__main__':
             results = numpy.zeros(N)  
             tstart = time.clock()
             for i in range(0, N):
-                results[i] = len(init_ind_cascade(node,NC_digraph))
+                results[i] = len(init_ind_cascade([node],NC_digraph))
         
             mean_arr.append(numpy.mean(results))   
             print str(N) + " done."
@@ -138,5 +165,18 @@ if __name__ == '__main__':
     
     plt.plot(N_arr,std_arr)
     print std_arr
+    '''
+    nodes = ['E6Eh1bz6fpo6EOPtctA-sg', 'VFOwxpOWH9RZ3iMelkRd7A']
+    N = 10000    
+    #cascade_trials does above in one function, outputting dictionary
+    #with time/mean/std
+    print cascade_trials(N, nodes, NC_digraph)
+    '''
+    greedy method for calculating max influence
+    takes a while to run with 1000 trials, output was:
+    [u'VhI6xyylcAxi0wOy2HOX3w', u'NzWLMPvbEval0OVg_YDn4g', u'ts7EG6Zv2zdMDg29nyqGfA]
+    
+    print greedy_max_influence(NC_digraph, 3, 1000)
+    '''
     
     
