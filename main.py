@@ -118,7 +118,7 @@ def lambda_trial(nc,seed):
     node = nc.nodes()[node]
     #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
     #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
-    N_arr = [10,50,100,300,500,1000]
+    N_arr = [50,100,300,500,1000,2000]
     std_arr = []
     for N in N_arr:
         mean_arr = []
@@ -138,6 +138,12 @@ def lambda_trial(nc,seed):
         std_arr.append(numpy.std(mean_arr))
     
     plt.plot(N_arr,std_arr)
+    log_N = map(lambda x: math.log(x), N_arr)
+    log_std = map(lambda x: math.log(x), std_arr)
+    
+    sol = numpy.polyfit(log_N,log_std,1)
+    print "lambda = " + str(sol[0])
+    print "mu = " + str(sol[1])
     return std_arr
 
 def cascade_trials(N, nodes, graph):
@@ -157,6 +163,7 @@ def greedy_max_influence(g, size, infl_trials):
             cascade_run = cascade_trials(infl_trials, sel_nodes | set([node]), g)
             if cascade_run["mean"] > inf_max:
                 inf_max = cascade_run["mean"]
+                
                 max_node = node
         if max_node is not None:
             sel_nodes.add(max_node)
@@ -170,6 +177,10 @@ if __name__ == '__main__':
     NC_digraph = import_graph("nc_mini.json")
    
     #print lambda_trial(NC_digraph,24)
+    # returned:
+    # std_arr = [3.912023005428146, 4.605170185988092, 5.703782474656201, 6.214608098422191, 6.907755278982137, 7.600902459542082]
+    # lambda = -0.480942917902
+    # mu = 2.50377674976
     
     nodes = ['E6Eh1bz6fpo6EOPtctA-sg', 'VFOwxpOWH9RZ3iMelkRd7A']
     N = 10000    
@@ -182,6 +193,5 @@ if __name__ == '__main__':
     [u'VhI6xyylcAxi0wOy2HOX3w', u'NzWLMPvbEval0OVg_YDn4g', u'ts7EG6Zv2zdMDg29nyqGfA]
     '''
     #print greedy_max_influence(NC_digraph, 3, 1000)
-
     
     
