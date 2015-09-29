@@ -74,20 +74,23 @@ def rank_by_attribute2(graph_dict, ret_num):
             top_nodes.insert(index, node)
     return top_nodes[:ret_num]
 
-def init_ind_cascade(nodes,nc):
+def init_ind_cascade(nodes,nc,max_iterations = float("inf")):
     activated = set(nodes)
     q = Queue.Queue()
     for node in nodes:
-        q.put(node)
+        q.put((node, 0))
     
     while not q.empty():
-        node = q.get()
-        edges = nx.edges_iter(nc, nbunch=node)
-        for x in edges:
-            #if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
-            if x[1] not in activated and random.uniform() <= random.beta(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count'])**0.5:
-                activated.add(x[1])
-                q.put(x[1])
+        node, iteration = q.get()
+        if iteration <= max_iterations:
+            edges = nx.edges_iter(nc, nbunch=node)
+            for x in edges:
+                #if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
+                if x[1] not in activated and random.uniform() <= random.beta(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count'])**0.5:
+                    activated.add(x[1])
+                    q.put((x[1], iteration+1))
+        else:
+            return activated
         #ind_cascade(node,nc,activated,q)
         
     return activated
@@ -146,11 +149,11 @@ def lambda_trial(nc,seed):
     print "mu = " + str(sol[1])
     return std_arr
 
-def cascade_trials(N, nodes, graph):
+def cascade_trials(N, nodes, graph, max_iterations=float("inf")):
     results = numpy.zeros(N)
     start = time.time()
     for i in xrange(0, N):
-        results[i] = len(init_ind_cascade(nodes, graph))
+        results[i] = len(init_ind_cascade(nodes, graph, max_iterations))
     return {"time": time.time() - start, "mean": numpy.mean(results), "std": numpy.std(results)}
     
 def greedy_max_influence(g, size, infl_trials):
@@ -186,7 +189,7 @@ if __name__ == '__main__':
     N = 10000    
     #cascade_trials does above in one function, outputting dictionary
     #with time/mean/std
-    #print cascade_trials(N, nodes, NC_digraph)
+    print cascade_trials(N, nodes, NC_digraph, 10)
     '''
     greedy method for calculating max influence
     takes a while to run with 1000 trials, output was:
