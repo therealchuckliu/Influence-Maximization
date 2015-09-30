@@ -8,6 +8,7 @@
 \usepackage{hyperref} % make references into links
 \hypersetup{colorlinks=true, linkcolor=blue} %make them pretty links
 \usepackage[all]{hypcap} %make them link to the right place
+\graphicspath{{spark_images/}{png/}}
 
 \begin{document}
 	\title{AC290r.1: Influence Maximization Problem}
@@ -73,9 +74,42 @@
 		Although this problem is inherently non-linear in its parameters (the starting set of nodes), we can try to solve it in a linear way. This is called the "Greedy Algorithm":
 		Given nodes $s_i = \{n_1, n_2,..., n_i\}$, check every remaining node to find node ${n_{i+1}}$ that maximizes $f(s_{i+1})$ where $s_{i+1} =  \{n_1, n_2, ..., n_i, n_{i+1}\}$.
 		
-		The greedy algorithm of order $k$ looks for $s_k$ satisfying the above condition. For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$ (run and attach $\Delta$ figure).
-	
-		So even in this simple solution implementation, we see a wide degree of randomness in our answer.	
+		The greedy algorithm of order $k$ looks for $s_k$ satisfying the above condition. The greedy algorithm is an "embarassingly parallel" problem. Using Spark, in one iteration of the greedy algorithm, we can distribute the nodes evenly and run the influence function. For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$.
+
+		\begin{table}[h!]
+		  \begin{center}
+		    \caption{100 runs with k=3, t=10}
+		    \label{tab:table1}
+		    \begin{tabular}{|c|c|c|c|} 
+		      \hline
+		      N & min & max & $\lambda$\\
+		      100  & 42.98 & 51.16 & 0.840\\
+		      300  & 44.73 & 49.24 & 0.908\\
+		      500  & 45.04 & 47.696 & 0.944\\
+		      1000 & 45.66 & 47.31 & 0.965\\
+		      \hline
+		    \end{tabular}
+		  \end{center}
+		\end{table}
+
+		The scatterplots of the max values over the 100 trials show the convergence of results as N increases.\\
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.75]{100_scatter}
+		\includegraphics[scale=0.75]{300_scatter}
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.75]{500_scatter}
+		\includegraphics[scale=0.75]{1000_scatter}	
+		\newpage	
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.5]{100_pie}
+		\includegraphics[scale=0.5]{300_pie}
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.5]{500_pie}
+		\includegraphics[scale=0.5]{1000_pie}	
+
+		We can similarly see the convergence through the number of nodes selected over the course of our trials.\\
+
+
 		
 	\section{Implementation}
 		
@@ -92,7 +126,6 @@
 		The simplest form for $\Delta E$ is $f(s_1) - f(s_2)$. In this case, if $f(s_2) > f(s_1)$ we take $s_2$ with probability 1, otherwise there is a chance of taking $s_2$ even though its estimated influence is less than our current state. This gives us an additional parameter to control our MCMC method: the "Temperature" $T$ controls how likely we are to take a step away from a maximum. So when we are not "near" a local maximum, a high $T$ allows us to sweep the parameter space quickly, but as we near a solution we take a low $T$ to make the MCMC very sensitive to small changes in $f_N(s)$.
 	
 	Address uncertainties in the optimization.
-	
 	
 	
 \end{document}
