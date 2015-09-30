@@ -139,14 +139,30 @@ def lambda_trial(nc,seed):
             #print numpy.mean(results)        
             #print numpy.std(results)
         std_arr.append(numpy.std(mean_arr))
+
     
-    plt.plot(N_arr,std_arr)
     log_N = map(lambda x: math.log(x), N_arr)
     log_std = map(lambda x: math.log(x), std_arr)
     
     sol = numpy.polyfit(log_N,log_std,1)
+    approx_std = map(lambda x: math.exp(sol[1])*x**sol[0], N_arr)
     print "lambda = " + str(sol[0])
-    print "mu = " + str(sol[1])
+    print "mu = " + str(math.exp(sol[1]))
+    
+    fig = plt.figure()
+    fig.add_subplot(111)
+    plt.plot(N_arr,std_arr,'b')
+    plt.plot(N_arr,approx_std,'r')
+    plt.plot()
+    plt.ylabel(r'$\sigma(f_N)$',fontsize=15)
+    plt.xlabel("N")
+    plt.title('')
+    fig.text(.55,.80, r'$\sigma(f_N) = \frac{\mu}{N^{\lambda}}$',fontsize = 15)
+    fig.text(.55,.72, '$\lambda$ = ' + str(-sol[0]))
+    fig.text(.55,.67,'    $\mu$ = ' + str(math.exp(sol[1])))
+    plt.show()
+    fig.savefig('lambda_regression.png')
+    
     return std_arr
 
 def cascade_trials(N, nodes, graph, max_iterations=float("inf")):
@@ -154,6 +170,19 @@ def cascade_trials(N, nodes, graph, max_iterations=float("inf")):
     start = time.time()
     for i in xrange(0, N):
         results[i] = len(init_ind_cascade(nodes, graph, max_iterations))
+    #plottng utility for our paper
+    '''
+    fig = plt.figure()
+    fig.add_subplot(111)
+    plt.hist(results)
+    plt.ylabel("Count")
+    plt.xlabel("Mean Influence (I(s))")
+    plt.title("N="+str(N))
+    fig.text(.55,.8, 'mean = ' + str(numpy.mean(results)))
+    fig.text(.55,.75,'    std = ' + str(numpy.std(results)))
+    plt.show()
+    fig.savefig('N1000_influence.png')
+    '''
     return {"time": time.time() - start, "mean": numpy.mean(results), "std": numpy.std(results)}
     
 def greedy_max_influence(g, size, infl_trials):
@@ -179,17 +208,23 @@ if __name__ == '__main__':
     
     NC_digraph = import_graph("nc_mini.json")
    
+    # Used for creating lambda regression histogram
     #print lambda_trial(NC_digraph,24)
     # returned:
     # std_arr = [3.912023005428146, 4.605170185988092, 5.703782474656201, 6.214608098422191, 6.907755278982137, 7.600902459542082]
     # lambda = -0.480942917902
     # mu = 2.50377674976
     
-    nodes = ['E6Eh1bz6fpo6EOPtctA-sg', 'VFOwxpOWH9RZ3iMelkRd7A']
-    N = 10000    
+    # Used for creating I(s) histogram
+    #random.seed(24)
+    #node = random.choice(NC_digraph.nodes())    
+    #print cascade_trials(1000,[node],NC_digraph)
+    
+    #nodes = ['E6Eh1bz6fpo6EOPtctA-sg', 'VFOwxpOWH9RZ3iMelkRd7A']
+    #N = 10000    
     #cascade_trials does above in one function, outputting dictionary
     #with time/mean/std
-    print cascade_trials(N, nodes, NC_digraph, 10)
+    #print cascade_trials(N, nodes, NC_digraph, 10)
     '''
     greedy method for calculating max influence
     takes a while to run with 1000 trials, output was:

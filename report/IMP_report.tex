@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{courier}
+\usepackage{multicol}
 \usepackage{microtype} %required to fix courier linebreaking issues
 \usepackage{hyperref} % make references into links
 \hypersetup{colorlinks=true, linkcolor=blue} %make them pretty links
@@ -38,9 +39,15 @@
 	\section{Stochasticity}
 	
 	\subsection{Averaged Trial Function, $f_N(s)$}
-	Since each step of the independent cascade is a random sampling of the beta distribution, there is no gaurentee that two different measurements of $I(s)$ will be the same, or even "close" to one another. 
 	
-	Histogram of 1000 runs of I(s) goes here.
+	Since each step of the independent cascade is a random sampling of the beta distribution, there is no guarantee that two different measurements of $I(s)$ will be the same, or even "close" to one another, as seen in \ref{fig:Inf_1000}. 
+	
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[width=100mm]{N1000_influence.png}
+		\caption{Histogram of values $I(s)$ over 1000 iterations for a fixed node in the 240 North Carolina subgraph.}
+		\label{fig:Inf_1000}
+	\end{figure}
 	
 	Because of this, we must define a new measurement of a node's influence, namely its mean over $N$ samples:
 		\begin{equation}
@@ -49,22 +56,24 @@
 		}
 		\end{equation}
 		
+		
+		
 	\subsection{Properties of $f_N(s)$}
-	Obviously we cannot take $N$ arbitrarily large, so we must understand how $f_N$'s properties vary with $N$. Taking a 240 node subset of North Caroline, we obtain the following relationship between $N$ and the standard deviation of $f_N$:
+	Obviously we cannot take $N$ arbitrarily large, so we must understand how $f_N$'s properties vary with $N$. Taking a 240 node subset of North Carolina, we obtain the following relationship between $N$ and the standard deviation of $f_N$ in \ref{fig:lambda}.
 	
-			\begin{equation}
-			\boxed{
-				\sigma(f_N) = \frac{\mu}{N^{\lambda}}, \mu =  2.504, \lambda = 0.4809
-			}
-			\end{equation}
+		\begin{figure}[h!]
+			\centering
+			\includegraphics[width=100mm]{lambda_regression.png}
+			\caption{Fitted regression for the standard deviation of $f_N(s)$. This was with 100 trials for each N value. The blue line is the simulation, while the red line is the fitted relationship.}
+			\label{fig:lambda}
+		\end{figure}
 			
-	experimental vs fitted standard deviation plot goes here.
 	
 	\subsection{Greedy Algorithm}
 		Although this problem is inherently non-linear in its parameters (the starting set of nodes), we can try to solve it in a linear way. This is called the "Greedy Algorithm":
 		Given nodes $s_i = \{n_1, n_2,..., n_i\}$, check every remaining node to find node ${n_{i+1}}$ that maximizes $f(s_{i+1})$ where $s_{i+1} =  \{n_1, n_2, ..., n_i, n_{i+1}\}$.
 		
-		The greedy algorithm of order $k$ looks for $s_k$ satisfying the above condition. For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$ (run and attach figure).
+		The greedy algorithm of order $k$ looks for $s_k$ satisfying the above condition. For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$ (run and attach $\Delta$ figure).
 	
 		So even in this simple solution implementation, we see a wide degree of randomness in our answer.	
 		
@@ -76,11 +85,11 @@
 		
 		\begin{equation}
 		\boxed{
-			P(s_1,s_2) = e^\frac{\Delta E}{T}, \Delta E(f(s_2),f(s_1))
+			P(s_1,s_2) = e^\frac{-\Delta E}{T}, \Delta E(f(s_2),f(s_1))
 		}
 		\end{equation}
 		
-		The simplest form for $\Delta E$ is $f(s_2) - f(s_1)$. In this case, if $f(s_2) > f(s_1)$ we take $s_2$ with probability 1, otherwise there is a chance of taking $s_2$ even though its estimated influence is less than our current state. This gives us an additional parameter to control our MCMC method: the "Temperature" $T$ controls how likely we are to take a step away from a maximum. So when we are not "near" a local maximum, a high $T$ allows us to sweep the parameter space quickly, but as we near a solution we take a low $T$ to make the MCMC very sensitive to small changes in $f_N(s)$.
+		The simplest form for $\Delta E$ is $f(s_1) - f(s_2)$. In this case, if $f(s_2) > f(s_1)$ we take $s_2$ with probability 1, otherwise there is a chance of taking $s_2$ even though its estimated influence is less than our current state. This gives us an additional parameter to control our MCMC method: the "Temperature" $T$ controls how likely we are to take a step away from a maximum. So when we are not "near" a local maximum, a high $T$ allows us to sweep the parameter space quickly, but as we near a solution we take a low $T$ to make the MCMC very sensitive to small changes in $f_N(s)$.
 	
 	Address uncertainties in the optimization.
 	
