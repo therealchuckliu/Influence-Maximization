@@ -6,7 +6,7 @@ Spark greedy functions
 """
 from main import cascade_trials
 
-def greedy_trials(sc, num_trials, g, k, N, t=float("inf"), partitions=4):
+def greedy_trials(sc, num_trials, g, k, N, t=float("inf"), partitions=8):
     results = []
     nodes = []
     grdd = sc.parallelize(g.nodes(), partitions)
@@ -23,6 +23,14 @@ def greedy_search(graph_rdd, graph, select_count, trials, iterations=float("inf"
         pairsRDD = pairsRDD.filter(lambda x: len(x[0]) == iteration)
         max_influence = pairsRDD.takeOrdered(1, key=lambda x: -x[1])[0]
     return max_influence
+
+
+# N%parts = 0    
+def spark_trials(rdd,N, nodes, graph, max_iterations=float("inf")):
+
+    rdd = rdd.map(lambda x: cascade_trials(N, nodes, graph, max_iterations))
+    return rdd.reduce(lambda x,y: {'time': x['time'] + y['time'],'mean': 0.5*x['mean'] + 0.5*y['mean'],'std': 0.5*x['std'] + 0.5*y['std']})
+    
 
 def node_count(results):
     ret = {}
