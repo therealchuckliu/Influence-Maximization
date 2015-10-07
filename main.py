@@ -94,6 +94,27 @@ def init_ind_cascade(nodes,nc,max_iterations = float("inf")):
         #ind_cascade(node,nc,activated,q)
         
     return activated
+    
+def init_full_cascade(nodes,nc,max_iterations= float("inf")):
+    activated = set(nodes)
+    q = Queue.Queue()
+    for node in nodes:
+        q.put((node, 0))
+    
+    while not q.empty():
+        node, iteration = q.get()
+        if iteration <= max_iterations:
+            edges = nx.edges_iter(nc, nbunch=node)
+            for x in edges:
+                #if x[1] not in activated and edge_activate(nc[x[0]][x[1]]['weight'],nc.node[x[1]]['review_count']):
+                if x[1] not in activated and True:
+                    activated.add(x[1])
+                    q.put((x[1], iteration+1))
+        else:
+            return activated
+        #ind_cascade(node,nc,activated,q)
+        
+    return activated
 
 #unused 
 def ind_cascade(node_id,nc,activated,q):
@@ -116,54 +137,79 @@ def lambda_trial(nc,seed):
     #attempts to find a best fit for std = N^(lambda)
     #lambda should be ~ -0.5
 
-    random.seed(seed)
-    node = random.randint(0, 240)
-    node = nc.nodes()[node]
-    #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
-    #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
-    N_arr = [50,100,300,500,1000,2000]
-    std_arr = []
-    for N in N_arr:
-        mean_arr = []
-        run_size = 100
-        for i in xrange(0,run_size - 1):
-            results = numpy.zeros(N)  
-            tstart = time.clock()
-            for i in range(0, N):
-                results[i] = len(init_ind_cascade([node],nc))
-        
-            mean_arr.append(numpy.mean(results))   
-            print str(N) + " done."
-                    
-            #print "Time: " + str(time.clock() - tstart)
-            #print numpy.mean(results)        
-            #print numpy.std(results)
-        std_arr.append(numpy.std(mean_arr))
+    #random.seed(seed)
+    lambda_arr = []
+    mu_arr = []
+    means = []
+    
+    colors = "bgrcmykw"
+    color_index = 0
+    
 
+    for k in xrange(0,3):
+        
+        node_check = True
+        while node_check:
+            node = random.choice(nc.nodes())
+            if len(init_ind_cascade([node],nc)) > 2:
+                node_check = False
+        #print "Starting Node " + str(node) + ":" + NC_digraph.nodes()[node]
+        #print "Activated:" + str(len(init_ind_cascade(NC_digraph.nodes()[node],NC_digraph)))
+        N_arr = [10,50,100,300,500]
+        std_arr = []
+        mean_here = 0
+        for N in N_arr:
+            mean_arr = []
+            run_size = 100
+            for j in xrange(0,run_size - 1):
+                results = numpy.zeros(N)  
+                for i in range(0, N):
+                    results[i] = len(init_ind_cascade([node],nc))
+            
+                mean_arr.append(numpy.mean(results))
+                
+            std_arr.append(numpy.std(mean_arr))
+            mean_here = numpy.mean(mean_arr)
+        
+        
+        means.append(mean_here)
     
-    log_N = map(lambda x: math.log(x), N_arr)
-    log_std = map(lambda x: math.log(x), std_arr)
-    
-    sol = numpy.polyfit(log_N,log_std,1)
-    approx_std = map(lambda x: math.exp(sol[1])*x**sol[0], N_arr)
-    print "lambda = " + str(sol[0])
-    print "mu = " + str(math.exp(sol[1]))
-    
-    fig = plt.figure()
-    fig.add_subplot(111)
-    plt.plot(N_arr,std_arr,'b')
-    plt.plot(N_arr,approx_std,'r')
+            
+        log_N = map(lambda x: math.log(x), N_arr)
+        print std_arr
+        log_std = map(lambda x: math.log(x), std_arr)
+        
+        sol = numpy.polyfit(log_N,log_std,1)
+        approx_std = map(lambda x: math.exp(sol[1])*x**sol[0], N_arr)
+        
+        print "lambda = " + str(sol[0])
+        lambda_arr.append(sol[0])
+        
+        print "mu = " + str(math.exp(sol[1]))
+        mu_arr.append(math.exp(sol[1]))
+        
+        print "mean = " + str(mean_here)
+        mean_arr.append(mean_here)
+        
+        plt.hold(True)
+        plt.plot(N_arr,std_arr,c=colors[color_index], label='true ' + str(mean_here))
+        #plt.plot(N_arr,approx_std,c=colors[color_index],label='approx '+ str(mean_here),'-')
+        color_index += 1
+        
+        print str(k) + ' done.'
+        
     plt.plot()
     plt.ylabel(r'$\sigma(f_N)$',fontsize=15)
     plt.xlabel("N")
     plt.title('')
-    fig.text(.55,.80, r'$\sigma(f_N) = \frac{\mu}{N^{\lambda}}$',fontsize = 15)
-    fig.text(.55,.72, '$\lambda$ = ' + str(-sol[0]))
-    fig.text(.55,.67,'    $\mu$ = ' + str(math.exp(sol[1])))
-    plt.show()
-    fig.savefig('lambda_regression.png')
+    plt.legend()
+    #fig.text(.55,.80, r'$\sigma(f_N) = \frac{\mu}{N^{\lambda}}$',fontsize = 15)
+    #fig.text(.55,.72, '$\lambda$ = ' + str(-sol[0]))
+    #fig.text(.55,.67,'    $\mu$ = ' + str(math.exp(sol[1])))
+    #plt.show()
+    #fig.savefig('lambda_regression.png')
     
-    return std_arr
+    return 
 
 def cascade_trials(N, nodes, graph, max_iterations=float("inf")):
     results = numpy.zeros(N)
@@ -207,6 +253,7 @@ def greedy_max_influence(g, size, infl_trials):
 if __name__ == '__main__':
     
     NC_digraph = import_graph("nc_mini.json")
+    lambda_trial(NC_digraph,4)
    
     # Used for creating lambda regression histogram
     #print lambda_trial(NC_digraph,24)
