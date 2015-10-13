@@ -11,7 +11,7 @@ def greedy_trials(sc, num_trials, g, k, N, t=float("inf"), partitions=8):
     results = []
     nodes = []
     grdd = sc.parallelize(g.nodes(), partitions)
-    grdd = grdd.filter(lambda x: nx.edges(g, nbunch=x) > 0)
+    grdd = grdd.filter(lambda x: len(nx.edges(g, nbunch=x)) > 0)
     for trial in range(0, num_trials):
         result = greedy_search(grdd, g, k, N, t)
         results.append(result[1])
