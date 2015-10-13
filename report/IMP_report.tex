@@ -93,29 +93,31 @@
 		\end{table}
 
 		The scatterplots of the max values over the 100 trials show the convergence of results as N increases.\\
+		{\centering
 		\hspace*{-3.75cm}
-		\includegraphics[scale=0.75]{100_scatter}
-		\includegraphics[scale=0.75]{300_scatter}
+		\includegraphics[scale=0.55]{100_scatter}
+		\includegraphics[scale=0.55]{300_scatter}
 		\hspace*{-3.75cm}
-		\includegraphics[scale=0.75]{500_scatter}
-		\includegraphics[scale=0.75]{1000_scatter}	
-		\newpage	
+		\includegraphics[scale=0.55]{500_scatter}
+		\includegraphics[scale=0.55]{1000_scatter}	
 		\hspace*{-3.75cm}
-		\includegraphics[scale=0.5]{100_pie}
-		\includegraphics[scale=0.5]{300_pie}
+		\includegraphics[scale=0.4]{100_pie}
+		\includegraphics[scale=0.4]{300_pie}
 		\hspace*{-3.75cm}
-		\includegraphics[scale=0.5]{500_pie}
-		\includegraphics[scale=0.5]{1000_pie}	
+		\includegraphics[scale=0.4]{500_pie}
+		\includegraphics[scale=0.4]{1000_pie}
+		\par}	
 
 		We can similarly see the convergence through the number of nodes selected over the course of our trials.\\
 
 
 		
 	\section{Implementation}
+	
+	\subsection{MCMC and Simulated Annealing}
+	For a large problem with $N$ nodes, the greedy algorithm would need to check roughly $N^k$ node arrangements (first $N$, then $N-1$, etc.). For $k > 2$ this will not be feasible. Instead, we implement a Monte Carlo method of picking sets of nodes at random and evaluating their influence. Although this method will not guarantee we find the optimal solution, we can define a iterative method (Markov Chain) that on average will find a better solution after each step.
 		
-	Markov Chain Monte Carlo (MCMC)
-		
-	What is Simulated Annealing?
+	The idea of a Markov Chain Monte Carlo (MCMC) algorithm is to use the function of interest to assign a weight to every position in parameter space, and use this weight to add control to the "random steps" of a Monte Carlo method. Our function is the mean influence, $f_N(s)$, and our parameter space is the unordered combination of $k$ nodes $s = \{n_i\}$. Instead of always taking a "random step" around parameter space, we assign to each step a probability of success:
 		
 		\begin{equation}
 		\boxed{
@@ -123,9 +125,37 @@
 		}
 		\end{equation}
 		
+		Where $s_1$ is our current set of nodes and $s_2$ is a new proposed set. Controlling the Monte Carlo method in this manner is known as Simulated Annealing, as the probability formula mimics the Boltzmann factor of statistical mechanics. The Boltzmann factor describes the relative probability of a particle being in state $s$ when it is in a thermal equilibrium of temperature $T$. Annealing such a system means heating it up and then slowly cooling it down, allowing the particle(s) to settle into a new arrangement, hopefully of lower energy. For our problem we take the "Energy" to be $-f_N(s)$, since we want to maximize $f_N(s)$. 
+		
 		The simplest form for $\Delta E$ is $f(s_1) - f(s_2)$. In this case, if $f(s_2) > f(s_1)$ we take $s_2$ with probability 1, otherwise there is a chance of taking $s_2$ even though its estimated influence is less than our current state. This gives us an additional parameter to control our MCMC method: the "Temperature" $T$ controls how likely we are to take a step away from a maximum. So when we are not "near" a local maximum, a high $T$ allows us to sweep the parameter space quickly, but as we near a solution we take a low $T$ to make the MCMC very sensitive to small changes in $f_N(s)$.
 	
-	Address uncertainties in the optimization.
+	\subsection{Advantages and Shortcomings}
+	
+	As the MCMC is an iterative process that gives a solution from the first step that slowly improves with each iteration, it is better than the greedy algorithm which needs to finish in its entirety before an answer can be output. Furthermore, the greedy algorithm does not guarantee to find the answer, and it should find the same sub-optimal solution everytime (provided $N$ is large enough). The MCMC will "eventually" find the global maximum influence, as it will eventually cover all possible permutations of nodes. So for large graphs, the MCMC method is clearly superior, so the only work left to do is to find how to speed up each iteration without sacrificing accuracy. A number of methods to speed up the MCMC process is covered next.
+	
+	\subsection{Choice of Parameters for Speed}
+	
+	\subsubsection{$\Delta$ E}
+	
+	For small graphs, $\Delta E = f(s_1) - f(s_2)$ will work. But for large graphs, this will allow $P(s_1,s_2)$ to be unsuitable large or small. Instead we take $\Delta E = log(f(s_1)) - log(f(s_2))$, allowing $P(s_1,s_2)$ to be tractable both conceptually and computationally.
+	
+	\subsubsection{N}
+	
+	Table of $\mu$ and $\lambda$ as a function of $f_N(s)$ for NC small,NC large, (And US?)
+	
+	\subsubsection{T}
+	
+	Start with $T = 1$. After each successful step, set $T_{n+1} = \alpha*T_n$ where $\alpha < 1$.
+
+	\subsubsection{Allowed Nodes $(s_i)$}
+	
+	Only allow the top 5\% or 10\% of nodes (by edge count or by edges of neighbors). For generating $s_{n+1}$ given $s_n$, randomly swap one of the nodes of $s_n$ to any other node ("closeness" is controlled by keeping the other nodes the same, NOT by staying "near" the changed node on the graph).
+	
+	\subsubsection{Re-annealing Control}
+
+	If no new local maximum is found in $k$  attempts, set $T = 1$ to "restart" the search process (i.e. allow for "large steps" again but start from the current set of nodes).
+	
+	
 	
 	
 \end{document}

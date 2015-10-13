@@ -146,10 +146,11 @@ def lambda_trial(nc,seed):
     color_index = 0
     
 
-    for k in xrange(0,3):
+    for k in xrange(0,6):
         
         node_check = True
         while node_check:
+            print 'checking....'
             node = random.choice(nc.nodes())
             if len(init_ind_cascade([node],nc)) > 2:
                 node_check = False
@@ -158,6 +159,8 @@ def lambda_trial(nc,seed):
         N_arr = [10,50,100,300,500]
         std_arr = []
         mean_here = 0
+        
+        print 'loop start'
         for N in N_arr:
             mean_arr = []
             run_size = 100
@@ -172,10 +175,16 @@ def lambda_trial(nc,seed):
             mean_here = numpy.mean(mean_arr)
         
         
-        means.append(mean_here)
-    
+        print 'loop stop'
+        
+        log_N = []
+        for N in N_arr:
+            log_N.append(math.log(N))
             
-        log_N = map(lambda x: math.log(x), N_arr)
+        log_std =[]
+        for std in log_std:
+            log_std.append(math.log(std))
+            
         print std_arr
         log_std = map(lambda x: math.log(x), std_arr)
         
@@ -189,20 +198,22 @@ def lambda_trial(nc,seed):
         mu_arr.append(math.exp(sol[1]))
         
         print "mean = " + str(mean_here)
-        mean_arr.append(mean_here)
+        means.append(mean_here)        
         
-        plt.hold(True)
-        plt.plot(N_arr,std_arr,c=colors[color_index], label='true ' + str(mean_here))
+        #plt.hold(True)
+        #plt.plot(N_arr,std_arr,c=colors[color_index], label='true ' + str(mean_here))
         #plt.plot(N_arr,approx_std,c=colors[color_index],label='approx '+ str(mean_here),'-')
         color_index += 1
         
         print str(k) + ' done.'
         
-    plt.plot()
+    plt.scatter(means,mu_arr)
+    '''
     plt.ylabel(r'$\sigma(f_N)$',fontsize=15)
     plt.xlabel("N")
     plt.title('')
     plt.legend()
+    '''
     #fig.text(.55,.80, r'$\sigma(f_N) = \frac{\mu}{N^{\lambda}}$',fontsize = 15)
     #fig.text(.55,.72, '$\lambda$ = ' + str(-sol[0]))
     #fig.text(.55,.67,'    $\mu$ = ' + str(math.exp(sol[1])))
@@ -229,7 +240,7 @@ def cascade_trials(N, nodes, graph, max_iterations=float("inf")):
     plt.show()
     fig.savefig('N1000_influence.png')
     '''
-    return {"time": time.time() - start, "mean": numpy.mean(results), "std": numpy.std(results)}
+    return {"time": time.time() - start, "mean": numpy.mean(results), "std": numpy.std(results)}    
     
 def greedy_max_influence(g, size, infl_trials):
     sel_nodes = set()
@@ -248,12 +259,65 @@ def greedy_max_influence(g, size, infl_trials):
             nodes.remove(max_node)
         else:
             return sel_nodes
-    return sel_nodes    
-        
-if __name__ == '__main__':
+    return sel_nodes
+
+# returns an array of nodes from graph which k or more neighbors
+def edge_count_pruner(graph,k,nodes=0):
+    if nodes == 0:
+        nodes = graph.nodes()
+    start = time.time()
+    pruned = []
+    for n in nodes:
+        if len(graph.edges(nbunch=n)) > k:
+            pruned.append(n)
+    print time.time() - start
     
+    print float(len(pruned))/(float(len(graph.nodes())))  
+    return pruned
+
+# returns an array of nodes from graph with k or more neighbors-of-neighbors (slower)
+def edge_count_pruner_2(graph,k,nodes=0):
+    
+    if nodes == 0:
+        nodes = graph.nodes()
+    start = time.time()
+    pruned = []
+    for n in nodes:
+        found = []
+        count = 0
+        edges = nx.edges_iter(graph, nbunch=n)
+        for x in edges:
+            if x[1] not in found:
+                count += 1
+                found.append(x[1])
+            edges2 = nx.edges_iter(graph,nbunch=x[1])
+            for y in edges2:
+                if y[1] not in found:
+                    count += 1
+                    found.append(y[1])
+        if count > k:
+            pruned.append(n)
+    print time.time() - start
+    
+    print float(len(pruned))/(float(len(graph.nodes())))  
+    return pruned
+    
+if __name__ == '__main__':
+      
+    nc_digraph = import_graph('NC_full.json')
+    print 'imported!'
+
+    #nodes1 = edge_count_pruner(nc_digraph,20)
+    nodes2 = edge_count_pruner_2(nc_digraph,500)
+    
+    
+    
+    '''
+    print 'importing...'    
     NC_digraph = import_graph("nc_mini.json")
+    print 'import done'
     lambda_trial(NC_digraph,4)
+    '''
    
     # Used for creating lambda regression histogram
     #print lambda_trial(NC_digraph,24)
