@@ -21,9 +21,9 @@ def greedy_trials(sc, num_trials, g, k, N, t=float("inf"), partitions=8):
 def greedy_search(graph_rdd, graph, select_count, trials, iterations=float("inf")):
     max_influence = (set(), 0)
     for iteration in range(1, select_count+1):
-        pairsRDD = graph_rdd.map(lambda x: (max_influence[0] | set([x]), cascade_trials(trials, max_influence[0] | set([x]), graph, iterations)['mean']))
+        pairsRDD = graph_rdd.map(lambda x: (max_influence[0] | set([x]), cascade_trials(trials, max_influence[0] | set([x]), graph, iterations)))
         pairsRDD = pairsRDD.filter(lambda x: len(x[0]) == iteration)
-        max_influence = pairsRDD.takeOrdered(1, key=lambda x: -x[1])[0]
+        max_influence = pairsRDD.takeOrdered(1, key=lambda x: -x[1]['mean'])[0]
     return max_influence
 
 
