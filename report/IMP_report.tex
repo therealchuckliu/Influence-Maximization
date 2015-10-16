@@ -210,11 +210,11 @@
 
 	\subsection{US Graph}
 
-		Using what we learned from our experiments on NC\_mini and NC\_full, we wanted to test three different algorithms for finding the most influential users.
+		Using what we learned from our experiments on NC\_mini and NC\_full, we test three different algorithms for finding the most influential users.
 
 		\begin{description}
 		\item[Heuristic Algorithm] \hfill \\
-			This is the standard heuristic algorithm that specifies the three nodes with the most edges. We found with N=5:
+			This is the standard heuristic algorithm that specifies the three nodes with the most edges. We found with N=100, t=10:
 
 			Nodes = \begin{center}
 					[Iu3Jo9ROp2IWC9FwtWOaUQ,\\
@@ -222,10 +222,10 @@
  					glRXVWWD6x1EZKfjJawTOg]\\
 			 		\end{center}
 
-			 Influence = 184169.8
+			 Influence = 184169.3
 
 		\item[Heuristic Algorithm V2] \hfill \\
-			Given what we learned in the NC\_Full section about the possibility of a heavily connected component, we can adjust our heuristic algorithm to choose the node with the most edges, remove all connected nodes to that edge, and reiterate until we have 3 nodes. We found with N=5:
+			Given the possibility of a heavily connected component, we can adjust our heuristic algorithm to choose the node with the most edges, remove all connected nodes to that edge, and reiterate until we have 3 nodes. We found with N=100, t=10:
 
 			Nodes = \begin{center}
 					[Iu3Jo9ROp2IWC9FwtWOaUQ,\\
@@ -233,12 +233,40 @@
  					znSMP7mggycgF-NP1rz93g]\\
 			 		\end{center}
 
-			 Influence = 184180.20
+			 Influence = 184259.3
 
 		\item[Greedy Algorithm] \hfill \\
-			
+			We devise a greedy algorithm that checks the connected components and iterates on $N$ and $t$. We define the following variables:
+
+		    \begin{tabular}{|c|c|} 
+		      \hline
+		      $N_0$ & Initial N \\
+		      $t_0$ & Initial t \\
+		      $I_N$ & Increment for N \\
+		      $I_t$ & Increment for t \\
+		      $S$ & Set of nodes \\
+		      $K$ & Set of selected nodes \\
+		      \hline
+		    \end{tabular}	
+
+			\begin{enumerate}
+			  \item Initialize $N=N_0,t=t_0,S=\text{all nodes},K=\emptyset$
+			  \item Run cascade function and return set of max nodes $X$
+			  \item Divide $X$ into connected components, select node $n$ with most edges in most populated connected component
+			  \item $K = K \cup [n]$
+			  \item $S = S \setminus \{\text{Nodes connected to }n\}$
+			  \item $N = N + I_N$
+			  \item $t = t + I_t$
+			  \item Repeat steps 2-7 until $|K|=k$
+			\end{enumerate}
+
+			As of \today, we have not been able to run this on the full US graph.
 			
 	\end{description}
+
+	\subsection{Future steps}
+
+		The initial and incremental $N$ and $t$ in the greedy algorithm can be calibrated. It's effect will be a tradeoff of the number of max nodes returned (and therefore the possible size of solutions) and the runtime of the algorithm.
 
 	\subsection{\href{https://github.com/chuckyouliu/Influence-Maximization}{Source Code}}
 
