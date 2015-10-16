@@ -71,11 +71,11 @@
 		\end{figure}
 			
 	
-	\subsection{Greedy Algorithm}
+	\section{Greedy Algorithm}
 		Although this problem is inherently non-linear in its parameters (the starting set of nodes), we can try to solve it in a linear way. This is called the "Greedy Algorithm":
 		Given nodes $s_i = \{n_1, n_2,..., n_i\}$, check every remaining node to find node ${n_{i+1}}$ that maximizes $f(s_{i+1})$ where $s_{i+1} =  \{n_1, n_2, ..., n_i, n_{i+1}\}$.
 
-	\subsubsection{NC\_Mini}
+	\subsection{NC\_Mini}
 
 		For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$.
 
@@ -121,14 +121,14 @@
 		}
 		\end{equation}
 
-	\subsubsection{NC\_Full}
+	\subsection{NC\_Full}
 
 		We wanted to do the same analysis with respect to the depth of search. For the larger NC\_full graph, our results were:
 
 		\begin{table}[h!]
 		  \begin{center}
 		    \caption{15 runs with k=3, N=50}
-		    \label{tab:table1}
+		    \label{tab:table2}
 		    \begin{tabular}{|c|c|c|c|} 
 		      \hline
 		      t & min & max & $\lambda$\\
@@ -152,10 +152,109 @@
 		\includegraphics[scale=0.4]{full_10t}
 		\par}	
 		
-		Due to computational limitations, we were only able to run 15 trials for each depth. However, we were still able to see some interesting patterns. First as a sanity check, we saw the influence function return higher values as depth increased - this of course should be the case. Second, we see $\lambda$ increase as depth increases for a consistent $N$. From $t=7$ to $t=9$ this seems to plateau, which may point to some bounds on the diameter of the largest connected components in the graph. Finally, unlike with increasing $N$, we see that the set of nodes returned over the trials increases as depth increases.
+		Due to computational limitations, we were only able to run 15 trials for each depth. However, we were still able to see some interesting patterns. First as a sanity check, we saw the influence function return higher values as depth increased - this of course should be the case. Second, we see $\lambda$ increase as depth increases for a consistent $N$. From $t=7$ to $t=10$ this seems to plateau, which may point to some bounds on the diameter of the largest connected components in the graph. Finally, unlike with increasing $N$, we see that the set of nodes returned over the trials increases as depth increases. In fact for $t=10$, 45 different nodes returned meaning there was a different node in every result.
 
+		What this implies is that there is a large connected component within NC\_full that, regardless of the nodes chosen, will give you roughly the optimal number from the greedy algorithm. We wrote a function to calculate the number of connected components from the set of nodes returned and found such:
 
-		
+		\begin{table}[h!]
+		  \begin{center}
+		    \caption{Connected Components for t}
+		    \label{tab:table3}
+		    \begin{tabular}{|c|c|c|c|} 
+		      \hline
+		      t & Total Nodes & Connected Components & Max Component Size\\
+		      1  & 5 & 1 & 5\\
+		      4  & 6 & 1 & 6\\
+		      7  & 35 & 6 & 30\\
+		      10 & 45 & 8 & 38\\
+		      \hline
+		    \end{tabular}
+		  \end{center}
+		\end{table}
+
+		This helps to explain why we see an increase of roughly 500 nodes reached going from $t=4$ to $t=7$ whereas only about 20 extra nodes reached from $t=7$ to $t=10$. 
+
+		Given that we know this information now, we can smartly choose three nodes that cover different components and run on a larger $N$. We should also beat the heuristic implementation of choosing the three nodes with the most edges, because as it turns out those three nodes are all in the same large component.
+
+		For the smartly chosen nodes from different components, we want to choose the two nodes with the most edges in two other components in our set of 8 in the $t=10$ run. It turns out that every node in the other components had only 1 edge, so we chose two at random.
+
+		\begin{table}[h!]
+		  \begin{center}
+		    \caption{Heuristic vs. Best Components Mix on N=1000}
+		    \label{tab:table4}
+		    \begin{tabular}{|c|c|} 
+		      \hline
+		      Nodes & Mean\\
+		      Heuristic & 8960.0698 \\
+		      Component Mix & 8970.6878 \\
+		      \hline
+		    \end{tabular}
+		  \end{center}
+		\end{table}
+
+		Heuristic nodes: 
+		\begin{center}
+		[CvMVd31cnTfzMUsHDXm4zQ, \\
+		NzWLMPvbEval0OVg\_YDn4g,\\
+		4G68oLRY3aHE5XUt\_MUUcA]\\
+		\end{center}
+
+		Component mix: 
+		\begin{center}
+		[wadTky-Lw9MVqDhiJUqPJA,\\
+		OYrEBnzYbL3dkoVdy1C10Q,\\
+		CvMVd31cnTfzMUsHDXm4zQ]\\
+ 		\end{center}
+
+		We have a lower value than our max from the $t=10$ run, which is expected as we saw a similar convergence in the NC\_mini tests. We do in fact see a better result from our component mix than the heuristic.
+
+	\subsection{US Graph}
+
+		Using what we learned from our experiments on NC\_mini and NC\_full, we wanted to test three different algorithms for finding the most influential users.
+
+		\begin{description}
+		\item[Heuristic Algorithm] \hfill \\
+			This is the standard heuristic algorithm that specifies the three nodes with the most edges. We found with N=5:
+
+			Nodes = \begin{center}
+					[Iu3Jo9ROp2IWC9FwtWOaUQ,\\
+					OaFcpi3W4AwxrD8W2pgC\_A,\\
+ 					glRXVWWD6x1EZKfjJawTOg]\\
+			 		\end{center}
+
+			 Influence = 184169.8
+
+		\item[Heuristic Algorithm V2] \hfill \\
+			Given what we learned in the NC\_Full section about the possibility of a heavily connected component, we can adjust our heuristic algorithm to choose the node with the most edges, remove all connected nodes to that edge, and reiterate until we have 3 nodes. We found with N=5:
+
+			Nodes = \begin{center}
+					[Iu3Jo9ROp2IWC9FwtWOaUQ,\\
+ 					2rghC4XAXTXuY\_ZGocVB1g,\\
+ 					znSMP7mggycgF-NP1rz93g]\\
+			 		\end{center}
+
+			 Influence = 184180.20
+
+		\item[Greedy Algorithm] \hfill \\
+			
+			
+	\end{description}
+
+	\subsection{\href{https://github.com/chuckyouliu/Influence-Maximization}{Source Code}}
+
+	*Section header is a link to github
+
+	\begin{description}
+		\item[Spark\_N.ipynb] \hfill \\
+			NC\_mini runs for N=100, 300, 500, 1000
+		\item[Greedy-Full] \hfill \\
+			NC\_full runs on Azure
+		\item[Greedy\_Analysis] \hfill \\
+			Compilation and Analysis of test runs
+		\item[sparkruns] \hfill \\
+			Folder of json's of all tests
+	\end{description}
+
 	\section{Implementation}
 	
 	\subsection{MCMC and Simulated Annealing}
