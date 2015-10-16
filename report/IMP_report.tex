@@ -172,11 +172,9 @@
 		  \end{center}
 		\end{table}
 
-		This helps to explain why we see an increase of roughly 500 nodes reached going from $t=4$ to $t=7$ whereas only about 20 extra nodes reached from $t=7$ to $t=10$. 
+		In $t=7,10$ there is a large component where the majority of max nodes are from, and then the rest are 1-node components. Given that we know this information now, we can smartly choose three nodes that cover different components and run on a larger $N$. We should also beat the heuristic implementation of choosing the three nodes with the most edges, because as it turns out those three nodes are all in the same large component.
 
-		Given that we know this information now, we can smartly choose three nodes that cover different components and run on a larger $N$. We should also beat the heuristic implementation of choosing the three nodes with the most edges, because as it turns out those three nodes are all in the same large component.
-
-		For the smartly chosen nodes from different components, we want to choose the two nodes with the most edges in two other components in our set of 8 in the $t=10$ run. It turns out that every node in the other components had only 1 edge, so we chose two at random.
+		For the chosen nodes from different components, we want to choose the two nodes with the most edges in our set of 8 in the $t=10$ run. It turns out that every node in the other components had only 1 edge, so we choose two at random.
 
 		\begin{table}[h!]
 		  \begin{center}
@@ -222,7 +220,7 @@
  					glRXVWWD6x1EZKfjJawTOg]\\
 			 		\end{center}
 
-			 Influence = 184169.3
+			 Influence = 184144.69
 
 		\item[Heuristic Algorithm V2] \hfill \\
 			Given the possibility of a heavily connected component, we can adjust our heuristic algorithm to choose the node with the most edges, remove all connected nodes to that edge, and reiterate until we have 3 nodes. We found with N=100, t=10:
@@ -233,7 +231,7 @@
  					znSMP7mggycgF-NP1rz93g]\\
 			 		\end{center}
 
-			 Influence = 184259.3
+			 Influence = 184198.57
 
 		\item[Greedy Algorithm] \hfill \\
 			We devise a greedy algorithm that checks the connected components and iterates on $N$ and $t$. We define the following variables:
@@ -266,7 +264,7 @@
 
 	\subsection{Future steps}
 
-		The initial and incremental $N$ and $t$ in the greedy algorithm can be calibrated. It's effect will be a tradeoff of the number of max nodes returned (and therefore the possible size of solutions) and the runtime of the algorithm.
+		The initial and incremental $N$ and $t$ in the greedy algorithm can be calibrated. It's effect will be a tradeoff of the number of max nodes returned (and therefore the possible solution set) and the runtime of the algorithm.
 
 	\subsection{\href{https://github.com/chuckyouliu/Influence-Maximization}{Source Code}}
 
