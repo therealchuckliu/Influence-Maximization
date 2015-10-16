@@ -6,6 +6,7 @@
 \usepackage{multicol}
 \usepackage{microtype} %required to fix courier linebreaking issues
 \usepackage{hyperref} % make references into links
+\usepackage{amsfonts}
 \hypersetup{colorlinks=true, linkcolor=blue} %make them pretty links
 \usepackage[all]{hypcap} %make them link to the right place
 \graphicspath{{spark_images/}{png/}}
@@ -73,8 +74,10 @@
 	\subsection{Greedy Algorithm}
 		Although this problem is inherently non-linear in its parameters (the starting set of nodes), we can try to solve it in a linear way. This is called the "Greedy Algorithm":
 		Given nodes $s_i = \{n_1, n_2,..., n_i\}$, check every remaining node to find node ${n_{i+1}}$ that maximizes $f(s_{i+1})$ where $s_{i+1} =  \{n_1, n_2, ..., n_i, n_{i+1}\}$.
-		
-		The greedy algorithm of order $k$ looks for $s_k$ satisfying the above condition. The greedy algorithm is an "embarassingly parallel" problem. Using Spark, in one iteration of the greedy algorithm, we can distribute the nodes evenly and run the influence function. For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$.
+
+	\subsubsection{NC\_Mini}
+
+		For $k = 3$ on our 240 node North Carolina subset we found variation in the maximal $I(s)$.
 
 		\begin{table}[h!]
 		  \begin{center}
@@ -92,12 +95,12 @@
 		  \end{center}
 		\end{table}
 
-		The scatterplots of the max values over the 100 trials show the convergence of results as N increases.\\
 		{\centering
 		\hspace*{-3.75cm}
 		\includegraphics[scale=0.55]{100_scatter}
 		\includegraphics[scale=0.55]{300_scatter}
 		\hspace*{-3.75cm}
+		\vspace*{1.25cm}
 		\includegraphics[scale=0.55]{500_scatter}
 		\includegraphics[scale=0.55]{1000_scatter}	
 		\hspace*{-3.75cm}
@@ -107,8 +110,49 @@
 		\includegraphics[scale=0.4]{500_pie}
 		\includegraphics[scale=0.4]{1000_pie}
 		\par}	
+		\newpage
+		
 
-		We can similarly see the convergence through the number of nodes selected over the course of our trials.\\
+		The scatterplots of the max values over the 100 trials show the convergence of results as N increases. We can similarly see the convergence through the number of nodes selected over the course of our trials. More formally, let $\mathbb{N}_i$ represent the set of nodes returned over all 100 trials of $N=i$. We have
+
+		\begin{equation}
+		\boxed{
+			 \mathbb{N}_i \subset \mathbb{N}_j, i > j\\
+		}
+		\end{equation}
+
+	\subsubsection{NC\_Full}
+
+		We wanted to do the same analysis with respect to the depth of search. For the larger NC\_full graph, our results were:
+
+		\begin{table}[h!]
+		  \begin{center}
+		    \caption{15 runs with k=3, N=50}
+		    \label{tab:table1}
+		    \begin{tabular}{|c|c|c|c|} 
+		      \hline
+		      t & min & max & $\lambda$\\
+		      1  & 1465.32 & 1504.28 & 0.9741\\
+		      4  & 8453.82 & 8480.96 & 0.9968\\
+		      7  & 8966.66 & 8980.06 & 0.9985\\
+		      10 & 8985.16 & 8998.66 & 0.9985\\
+		      \hline
+		    \end{tabular}
+		  \end{center}
+		\end{table}
+
+		{\centering
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.4]{full_1t}
+		\hspace*{1cm}
+		\includegraphics[scale=0.4]{full_4t}
+		\hspace*{-3.75cm}
+		\includegraphics[scale=0.4]{full_7t}
+		\hspace*{2cm}
+		\includegraphics[scale=0.4]{full_10t}
+		\par}	
+		
+		Due to computational limitations, we were only able to run 15 trials for each depth. However, we were still able to see some interesting patterns. First as a sanity check, we saw the influence function return higher values as depth increased - this of course should be the case. Second, we see $\lambda$ increase as depth increases for a consistent $N$. From $t=7$ to $t=9$ this seems to plateau, which may point to some bounds on the diameter of the largest connected components in the graph. Finally, unlike with increasing $N$, we see that the set of nodes returned over the trials increases as depth increases.
 
 
 		
